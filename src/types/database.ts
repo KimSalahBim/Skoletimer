@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
@@ -34,6 +34,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       subjects: {
         Row: {
@@ -63,6 +64,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       time_entries: {
         Row: {
@@ -92,6 +94,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       time_entry_subjects: {
         Row: {
@@ -112,10 +115,20 @@ export interface Database {
           subject_id?: string;
           minutes?: number;
         };
+        Relationships: [];
       };
     };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
   };
-}
+};
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Subject = Database["public"]["Tables"]["subjects"]["Row"];
