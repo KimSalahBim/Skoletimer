@@ -16,3 +16,4 @@ Denne appen er hostet på Vercel og bruker Supabase som backend.
 Miljøvariabler settes i Vercel Dashboard:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
