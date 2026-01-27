@@ -99,11 +99,15 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                     <p className="text-sm text-muted-foreground">{teacher.email}</p>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {teacher.teacher_functions?.map((f: any) => (
-                      <Badge key={f.id} variant="secondary" className="text-xs">
-                        {FUNCTION_TYPES[f.function_type as keyof typeof FUNCTION_TYPES]} ({f.percent_of_position}%)
-                      </Badge>
-                    ))}
+                    {teacher.teacher_functions?.map((f: any) => {
+                      const className = f.class_id ? classes.find((c: any) => c.id === f.class_id)?.name : null;
+                      const label = FUNCTION_TYPES[f.function_type as keyof typeof FUNCTION_TYPES];
+                      return (
+                        <Badge key={f.id} variant="secondary" className="text-xs">
+                          {label}{className ? ` ${className}` : ''} ({f.percent_of_position}%)
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -162,30 +166,41 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                     
                     {teacher.teacher_functions?.length > 0 ? (
                       <div className="space-y-2">
-                        {teacher.teacher_functions.map((f: any) => (
-                          <div key={f.id} className="flex justify-between items-center bg-muted/50 rounded p-2 text-sm">
-                            <div>
-                              <span className="font-medium">
-                                {FUNCTION_TYPES[f.function_type as keyof typeof FUNCTION_TYPES]}
-                              </span>
-                              {f.description && <span className="text-muted-foreground ml-2">({f.description})</span>}
+                        {teacher.teacher_functions.map((f: any) => {
+                          // Finn klassenavn hvis kontaktlærer
+                          const className = f.class_id ? classes.find(c => c.id === f.class_id)?.name : null;
+                          // Finn fagnavn hvis fagleder
+                          const subjectName = f.subject_id ? subjects.find(s => s.id === f.subject_id)?.name : null;
+                          
+                          return (
+                            <div key={f.id} className="flex justify-between items-center bg-muted/50 rounded p-2 text-sm">
+                              <div>
+                                <span className="font-medium">
+                                  {FUNCTION_TYPES[f.function_type as keyof typeof FUNCTION_TYPES]}
+                                </span>
+                                {className && <span className="text-muted-foreground ml-2">– {className}</span>}
+                                {subjectName && <span className="text-muted-foreground ml-2">– {subjectName}</span>}
+                                {f.description && !className && !subjectName && (
+                                  <span className="text-muted-foreground ml-2">({f.description})</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span>{f.percent_of_position}%</span>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-6 w-6"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteFunction(f.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span>{f.percent_of_position}%</span>
-                              <Button 
-                                size="icon" 
-                                variant="ghost" 
-                                className="h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteFunction(f.id);
-                                }}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Ingen funksjoner registrert</p>
@@ -216,7 +231,6 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                               step="0.5"
                               value={functionPercent}
                               onChange={(e) => setFunctionPercent(e.target.value)}
-                              className="h-9"
                             />
                           </div>
                         </div>
@@ -226,7 +240,6 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                             placeholder="F.eks. 'Kontaktlærer 8A'"
                             value={functionDescription}
                             onChange={(e) => setFunctionDescription(e.target.value)}
-                            className="h-9"
                           />
                         </div>
                         {functionType === 'contact_teacher' && (
