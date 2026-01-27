@@ -6,6 +6,11 @@ import { TeacherList } from "./teacher-list";
 import { FUNCTION_TYPES } from "@/types/database";
 import { formatPercent } from "@/lib/utils";
 
+// Konstanter fra SFS 2213
+const ARSRAMME_45MIN = 741;
+const RADGIVER_TIMER_PER_25_ELEVER_45MIN = 38;
+const RADGIVER_PROSENT_ARSVERK = 5;
+
 export default async function LærerePage() {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -37,10 +42,10 @@ export default async function LærerePage() {
     .order("school_type")
     .order("hours_45min", { ascending: false });
 
-  // Hent klasser for kontaktlærer-dropdown
+  // Hent klasser for kontaktlærer-dropdown med grade_level
   const { data: classes } = await supabase
     .from("classes")
-    .select("id, name")
+    .select("id, name, student_count, grade_level:grade_levels(level_category)")
     .eq("school_id", schoolId)
     .eq("is_active", true)
     .order("name");
@@ -52,6 +57,28 @@ export default async function LærerePage() {
     .eq("school_id", schoolId)
     .eq("is_active", true)
     .order("name");
+
+  // Beregn foreslått rådgiver-prosent basert på elevtall ungdomstrinnet
+  const ungdomstrinnClasses = classes?.filter(
+    (c: any) => c.grade_level?.level_category === 'ungdomstrinnet'
+  ) || [];
+  const ungdomstrinnElever = ungdomstrinnClasses.reduce(
+    (sum: number, c: any) => sum + (c.student_count || 0), 0
+  );
+  
+  // SFS 2213 formel: (påbegynt 25 elever × 38 timer / 741) + 5%
+  const pabegynt25 = Math.ceil(ungdomstrinnElever / 25) || 0;
+  const radgiverProsentFraElever = (pabegynt25 * RADGIVER_TIMER_PER_25_ELEVER_45MIN / ARSRAMME_45MIN) * 100;
+  const suggestedAdvisorPercent = radgiverProsentFraElever + RADGIVER_PROSENT_ARSVERK;
+
+  // Beregn allerede tildelt rådgiver-prosent
+  const existingAdvisorPercent = teachers?.reduce((sum: number, t: any) => {
+    const advisorFunctions = t.teacher_functions?.filter((f: any) => f.function_type === 'advisor') || [];
+    return sum + advisorFunctions.reduce((s: number, f: any) => s + (f.percent_of_position || 0), 0);
+  }, 0) || 0;
+
+  // Gjenstående rådgiver-ressurs
+  const remainingAdvisorPercent = Math.max(0, suggestedAdvisorPercent - existingAdvisorPercent);
 
   return (
     <div className="space-y-6">
@@ -68,11 +95,36 @@ export default async function LærerePage() {
         />
       </div>
 
+      {/* Rådgiver-status */}
+      {ungdomstrinnElever > 0 && (
+        <Card className={remainingAdvisorPercent > 0 ? "border-yellow-300 bg-yellow-50" : "border-green-300 bg-green-50"}>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">
+                  Rådgiverressurs (SFS 2213, {ungdomstrinnElever} elever ungdomstrinnet)
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Krav: {suggestedAdvisorPercent.toFixed(1)}% | Tildelt: {existingAdvisorPercent.toFixed(1)}%
+                </p>
+              </div>
+              <Badge variant={remainingAdvisorPercent > 0 ? "secondary" : "default"}>
+                {remainingAdvisorPercent > 0 
+                  ? `Gjenstår: ${remainingAdvisorPercent.toFixed(1)}%`
+                  : "✓ Dekket"
+                }
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <TeacherList 
         teachers={teachers || []} 
-        classes={classes || []}
+        classes={classes?.map((c: any) => ({ id: c.id, name: c.name })) || []}
         subjects={subjects || []}
         sfsFrameworks={sfsFrameworks || []}
+        suggestedAdvisorPercent={remainingAdvisorPercent}
       />
 
       {/* Info om funksjoner */}
@@ -81,10 +133,10 @@ export default async function LærerePage() {
           <CardTitle>Om funksjoner og stillingsberegning</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p><strong>Funksjoner:</strong> Kontaktlærer, rådgiver, fagleder osv. trekkes fra stillingen før undervisning beregnes.</p>
-          <p><strong>Årsramme:</strong> Fra SFS 2213. Bestemmer hvor mye en undervisningstime "koster" i prosent.</p>
-          <p><strong>Eksempel:</strong> Årsramme 700 timer → hver 45-min time = 0,143% stilling</p>
-          <p><strong>GAP-timer:</strong> Differansen mellom stilling og (funksjoner + undervisning). Positiv GAP = læreren har kapasitet igjen.</p>
+          <p><strong>Kontaktlærer:</strong> Minimum 5,1% (38 årsrammetimer) per SFS 2213.</p>
+          <p><strong>Rådgiver:</strong> Beregnes automatisk: (elever/25) × 38 timer + 5% årsverk.</p>
+          <p><strong>Funksjoner:</strong> Trekkes fra stillingen før undervisning beregnes.</p>
+          <p><strong>GAP-timer:</strong> Differansen mellom stilling og (funksjoner + undervisning).</p>
         </CardContent>
       </Card>
     </div>
