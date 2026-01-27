@@ -277,3 +277,28 @@ export const SUBJECT_CATEGORIES = {
   valgfag: 'Valgfag',
   annet: 'Annet',
 } as const;
+
+// Leseplikt / Undervisningsplikt
+export interface TeachingLoad {
+  id: string;
+  school_type: 'grunnskole' | 'vgs';
+  level_category: string;
+  subject_category: string;
+  description: string;
+  hours_per_week: number;
+  hours_per_year: number;
+  percent_per_lesson: number;
+  notes: string | null;
+}
+
+// Leseplikt-kategorier for visning
+export const TEACHING_LOAD_CATEGORIES = {
+  'norsk': 'Norsk/Samisk/Tegnspråk',
+  'engelsk_mathelse': 'Engelsk, Mat og helse',
+  'ovrige_fag': 'Øvrige fag',
+  'alle_fag': 'Alle fag (barnetrinnet)',
+  'norsk_vgs': 'Norsk VGS',
+  'realfag': 'Realfag/Fremmedspråk VGS',
+  'fellesfag_vgs': 'Fellesfag VGS',
+  'yrkesfag': 'Yrkesfag VGS',
+} as const;
