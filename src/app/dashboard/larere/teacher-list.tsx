@@ -221,7 +221,7 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks, sugges
                                 if (e.target.value === 'advisor' && suggestedAdvisorPercent > 0) {
                                   setFunctionPercent(suggestedAdvisorPercent.toFixed(1));
                                 } else if (e.target.value === 'contact_teacher') {
-                                  setFunctionPercent("5.1"); // 38/741 = 5.1%
+                                  setFunctionPercent("4.29"); // 1 t/u ÷ 23.3 t/u = 4.29%
                                 } else {
                                   setFunctionPercent("5");
                                 }
