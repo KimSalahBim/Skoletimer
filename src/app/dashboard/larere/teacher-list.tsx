@@ -17,9 +17,10 @@ interface TeacherListProps {
   classes: { id: string; name: string }[];
   subjects: { id: string; name: string }[];
   sfsFrameworks: any[];
+  suggestedAdvisorPercent?: number;
 }
 
-export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: TeacherListProps) {
+export function TeacherList({ teachers, classes, subjects, sfsFrameworks, suggestedAdvisorPercent = 0 }: TeacherListProps) {
   const [expandedTeacher, setExpandedTeacher] = useState<string | null>(null);
   const [addingFunctionFor, setAddingFunctionFor] = useState<string | null>(null);
   const [functionType, setFunctionType] = useState("");
@@ -214,7 +215,17 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                             <select
                               className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
                               value={functionType}
-                              onChange={(e) => setFunctionType(e.target.value)}
+                              onChange={(e) => {
+                                setFunctionType(e.target.value);
+                                // Sett foreslått prosent basert på type
+                                if (e.target.value === 'advisor' && suggestedAdvisorPercent > 0) {
+                                  setFunctionPercent(suggestedAdvisorPercent.toFixed(1));
+                                } else if (e.target.value === 'contact_teacher') {
+                                  setFunctionPercent("5.1"); // 38/741 = 5.1%
+                                } else {
+                                  setFunctionPercent("5");
+                                }
+                              }}
                             >
                               <option value="">Velg...</option>
                               {Object.entries(FUNCTION_TYPES).map(([key, label]) => (
@@ -231,6 +242,7 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                               step="0.5"
                               value={functionPercent}
                               onChange={(e) => setFunctionPercent(e.target.value)}
+                              className="h-9"
                             />
                           </div>
                         </div>
@@ -240,6 +252,7 @@ export function TeacherList({ teachers, classes, subjects, sfsFrameworks }: Teac
                             placeholder="F.eks. 'Kontaktlærer 8A'"
                             value={functionDescription}
                             onChange={(e) => setFunctionDescription(e.target.value)}
+                            className="h-9"
                           />
                         </div>
                         {functionType === 'contact_teacher' && (
