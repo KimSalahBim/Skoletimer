@@ -13,6 +13,7 @@ import {
   Calculator,
   CalendarDays,
   Settings,
+  ClipboardList,
   LogOut,
   Building2,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/dashboard/larere", label: "Lærere", icon: Users },
   { href: "/dashboard/trinn-klasser", label: "Trinn & Klasser", icon: GraduationCap },
   { href: "/dashboard/fag", label: "Fag", icon: BookOpen },
+  { href: "/dashboard/undervisning", label: "Undervisning", icon: ClipboardList },
   { href: "/dashboard/ressursberegning", label: "Ressursberegning", icon: Calculator },
   { href: "/dashboard/stillingsberegning", label: "Stillingsberegning", icon: Calculator },
   { href: "/dashboard/skolerute", label: "Skolerute", icon: CalendarDays },
